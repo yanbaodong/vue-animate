@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <style>
+    [v-cloak]{
+        display:none;
+    }
+    
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h2>天气查询</h2>
+      <input type="text" @keyup.enter="searchWeather" v-model.trim="city" />
+      <ul>
+        <li v-for="item in weatherList" v-cloak>
+          {{ item }}
+        </li>
+      </ul>
+    </div>
+
+    <!-- 开发环境版本，包含了有帮助的命令行警告 jquery.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
+    <script>
+      let app = new Vue({
+        el: "#app",
+        data: {
+          city: "",
+          weatherList: []
+        },
+        methods: {
+          searchWeather() {
+            // console.log(this.$http);
+            // $.ajax
+            this.$http
+              .get("http://wthrcdn.etouch.cn/weather_mini?city=" + this.city)
+              // this.$http.get('http://wthrcdn.etouch.cn/weat12312321312her_mini?city='+this.city)
+              .then(
+                response => {
+                  // 成功触发的函数
+                  // console.log(response)
+                  this.weatherList = response.body.data.forecast;
+                },
+                errResponse => {
+                  // 错误时触发
+                  console.log(errResponse);
+                }
+              );
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

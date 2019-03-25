@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <style>
+      .fade-enter-active,
+      .fade-leave-active {
+        transition: opacity 0.5s;
+      }
+      .fade-enter,
+     .fade-leave-to{
+        opacity: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="demo">
+      <button @click="show = !show">
+        Toggle
+      </button>
+      <br />
+      <transition name="fade">
+        <img src="./img/铲屎官请自重4.jpg" alt="" v-show="show" />
+      </transition>
+    </div>
+    <!-- 开发环境版本，包含了有帮助的命令行警告 jquery.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script>
+      let app = new Vue({
+        el: "#demo",
+        data: {
+          show: true
+        }
+      });
+    </script>
+  </body>
+</html>

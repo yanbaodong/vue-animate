@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>Document</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    #player {
+      display: flex;
+      height: 100%;
+    }
+
+    .list {
+      flex: 1;
+      background-color: #fdb903;
+    }
+
+    .play {
+      flex: 1;
+      background-color: #55c3ec;
+    }
+
+    .title {
+      /* height: 40px; */
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .search {
+      margin-top: 50px;
+      height: 40px;
+      width: 80%;
+      border-radius: 20px;
+      overflow: hidden;
+      border: none;
+      font-size: 30px;
+      outline: none;
+      padding-left: 20px;
+    }
+
+    /* 列表过渡动画 */
+    .list-item {
+      display: inline-block;
+      margin-right: 10px;
+    }
+
+    .list-enter-active,
+    .list-leave-active {
+      transition: all 1s;
+    }
+
+    .list-enter,
+    .list-leave-to {
+      opacity: 0;
+      transform: translateX(100px);
+    }
+
+    #player .list ul {
+      width: 80%;
+      margin: 0 auto;
+      padding: 0;
+    }
+
+    #player .list li {
+      width: 80%;
+      margin: 0 auto;
+      list-style: none;
+      height: 60px;
+      background-color: yellowgreen;
+      color: white;
+      cursor: pointer;
+      line-height: 60px;
+      border: s solid #000;
+      font-weight: 700;
+      padding-left: 10px;
+    }
+
+    #player .list li:hover {
+      background: linear-gradient(to right, red, yellow, blue, hotpink);
+    }
+
+    .cover {
+      width: 200px;
+      height: 200px;
+      display: block;
+      margin: 20px auto 0;
+      border-radius: 50%;
+      border: 20px solid #0f0;
+    }
+
+    /* 专辑的旋转效果 */
+    @keyframes autoRotate {
+      from {}
+
+      to {
+        transform: rotateZ(360deg);
+      }
+    }
+
+    /* 如果单纯的把这个类名移除 瞬间还原 */
+    .autoRotate {
+      animation-name: autoRotate;
+      animation-duration: 10s;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      animation-play-state: running;
+    }
+
+    /* 通过 状态让动画暂停 停在那个位置 */
+    .autoRotate.pause {
+      animation-play-state: paused;
+    }
+
+    /* 评论样式 */
+    li.comment {
+      display: flex;
+      height: 120px;
+    }
+
+    li.comment .left {
+      width: 100px;
+    }
+
+    li.comment .left img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      display: block;
+    }
+
+    li.comment .left span {
+      display: block;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    li.comment p {
+      flex: 1;
+      text-overflow: -o-ellipsis-lastline;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    video {
+      display: block;
+      width: 80%;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="player">
+    <div class="list">
+      <div class="title">
+        <input class="search" type="text" placeholder="请输入你要搜索的音乐" v-model.trim="search" @keyup.enter="searchsong" />
+      </div>
+      <transition-group name="list" tag="ul" @after-enter="afterEnter">
+        <li v-for="(item,index) in songList" :key="index" :style="'transition-delay:'+index*100+'ms'"
+          @dblclick="playMusic(item)">
+          {{ item.name }}--{{ item.artists[0].name }}
+        </li>
+      </transition-group>
+    </div>
+    <div class="play">
+      <img :src="picUrl" alt="" class="cover" :class="{pause:isplay==false}">
+      <audio :src="musicUrl" controls autoplay loop></audio>
+      <!-- 播放器
+           -->
+      <audio :src="musicUrl" controls autoplay loop @play="play" @pause="pause"></audio>
+      <!-- mv 播放器 -->
+      <video :src="mvUrl" controls loop autoplay></video>
+      <!-- 评论 -->
+      <transition-group name="list" tag="ul">
+        <li v-for="(item,index) in commentList" :key="index" class="comment">
+          <div class="left">
+            <img :src="item.user.avatarUrl" alt="" />
+            <span>{{ item.user.nickname }}</span>
+          </div>
+          <p>{{ item.content }}</p>
+        </li>
+      </transition-group>
+    </div>
+  </div>
+</body>
+
+</html>
+<!-- 开发环境版本，包含了有帮助的命令行警告 jquery.js -->
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
+<script>
+  let player = new Vue({
+    el: "#player",
+    data: {
+      search: "", //搜索内容
+      songList: [], //存放歌曲列表
+      musicUrl: '', //保存歌曲的路径
+      picUrl: "",  //专辑的头像
+      isplay: false, //是否播放
+      commentList: [],  //评论
+      mvUrl: ""   //mv 地址
+
+    },
+    methods: {
+      searchsong() {
+        //清空数组
+        this.songList = [] //清空歌曲列表
+        this.$http
+          .get('https://autumnfish.cn/search?keywords=' + this.search)
+          .then(
+            res => {
+              console.log(res);
+              //歌曲的列表
+              this.songList = res.body.result.songs;
+            },
+            err => { }
+          );
+      },
+      afterEnter(el) {
+        //清空li  的动画样式
+        el.style = "";
+      },
+      playMusic(item) { //播放的函数
+        this.$http.get('https://autumnfish.cn/song/url?id=' + item.id).then(
+          res => {
+            // console.log(res)
+            //播放的路径
+            this.musicUrl = res.body.data[0].url
+          },
+          err => { }
+        )
+        this.$http.get('https://autumnfish.cn/album?id=' + item.album.id).then(res => {
+          this.picUrl = res.body.album.picUrl
+
+        }, err => {
+
+        })
+        // 获取评论
+        this.$http
+          .get('https://autumnfish.cn/comment/hot?type=0&id=' + item.id)
+          .then(
+            res => {
+              // console.log(res)
+              this.commentList = res.body.hotComments
+            },
+            err => { }
+          )
+        // 获取mv
+        this.$http.get('https://autumnfish.cn/mv/url?id=' + item.mvid).then(res => {
+          // console.log(res);
+          this.mvUrl = res.body.data.url
+        }, err => { })
+      },
+      // 歌曲播放
+      play() {
+        console.log('play')
+        this.isPlay = true
+      },
+      // 歌曲暂停
+      pause() {
+        console.log('pause')
+        this.isPlay = false
+      }
+    }
+  });
+</script>
